@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cumpleaños de Valita - 21 Años</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Playfair+Display:ital,wght@0,600;0,800;1,400&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- Firebase SDKs (Compat v10) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --bg-beige: #f6f1e9;
+            --card-beige: #ebdccb;
+            --paper-color: #fcf8f2;
+            --vintage-brown: #5c4033;
+            --accent-gold: #c5a059;
+            --rose-dust: #b87d7b;
+            --dark-text: #362821;
+            --border-color: #d1beaa;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-beige);
+            background-image: radial-gradient(#d6c7b2 0.8px, transparent 0.8px), radial-gradient(#d6c7b2 0.8px, var(--bg-beige) 0.8px);
+            background-size: 32px 32px;
+            background-position: 0 0, 16px 16px;
+            color: var(--dark-text);
+            font-family: 'Lora', serif;
+            line-height: 1.6;
+            padding-bottom: 60px;
+        }
+
+        header {
+            text-align: center;
+            padding: 50px 20px 30px 20px;
+            position: relative;
+        }
+
+        .stamp-badge {
+            display: inline-block;
+            border: 2px dashed var(--accent-gold);
+            padding: 6px 16px;
+            font-family: 'Caveat', cursive;
+            font-size: 1.3rem;
+            color: var(--vintage-brown);
+            margin-bottom: 15px;
+            transform: rotate(-3deg);
+            background-color: var(--paper-color);
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.05);
+        }
+
+        h1.main-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            color: var(--vintage-brown);
+            text-transform: capitalize;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--rose-dust);
+            font-style: italic;
+            font-weight: 600;
+        }
+
+        .date-badge {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            color: var(--accent-gold);
+            margin-top: 8px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* Countdown Card */
+        .countdown-card {
+            background-color: var(--paper-color);
+            border: 1px solid var(--accent-gold);
+            padding: 20px;
+            border-radius: 4px;
+            margin: 20px auto 30px auto;
+            max-width: 650px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(92, 64, 51, 0.06);
+        }
+
+        .countdown-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            color: var(--vintage-brown);
+            margin-bottom: 15px;
+        }
+
+        .countdown-boxes {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .count-box {
+            background-color: var(--card-beige);
+            border: 1px solid var(--border-color);
+            padding: 10px 15px;
+            min-width: 75px;
+            border-radius: 4px;
+        }
+
+        .count-box span {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--vintage-brown);
+            display: block;
+        }
+
+        .count-box p {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--rose-dust);
+            margin-top: 2px;
+        }
+
+        .birthday-arrived-msg {
+            display: none;
+            font-family: 'Caveat', cursive;
+            font-size: 2.2rem;
+            color: var(--rose-dust);
+            margin-top: 10px;
+            animation: pulse 1.5s infinite;
+        }
+
+        .waiting-msg-box {
+            margin-top: 25px;
+            padding: 15px;
+            border-top: 1px dashed var(--border-color);
+            font-family: 'Caveat', cursive;
+            font-size: 1.4rem;
+            color: var(--vintage-brown);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .vintage-card {
+            background-color: var(--paper-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 35px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 25px rgba(92, 64, 51, 0.08);
+            position: relative;
+        }
+
+        .vintage-card::before {
+            content: '';
+            position: absolute;
+            top: 5px; left: 5px; right: 5px; bottom: 5px;
+            border: 1px solid var(--border-color);
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            color: var(--vintage-brown);
+            text-align: center;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '♦️ 21 ♦️';
+            display: block;
+            font-size: 0.9rem;
+            color: var(--accent-gold);
+            margin-top: 5px;
+        }
+
+        /* Boyfriend Special Section */
+        .boyfriend-section {
+            display: none;
+            background-color: #f3ece1;
+            border: 2px solid var(--accent-gold);
+            position: relative;
+            overflow: hidden;
+            animation: fadeIn 1s ease;
+        }
+
+        .boyfriend-ribbon {
+            position: absolute;
+            top: 20px;
+            right: -35px;
+            background-color: var(--rose-dust);
+            color: white;
+            padding: 5px 40px;
+            font-family: 'Caveat', cursive;
+            font-size: 1.2rem;
+            transform: rotate(45deg);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        }
+
+        .letter-content {
+            font-size: 1.15rem;
+            line-height: 1.9;
+            color: var(--dark-text);
+            text-align: justify;
+            white-space: pre-line;
+            padding: 10px 15px;
+            background: linear-gradient(to bottom, transparent 95%, rgba(197, 160, 89, 0.2) 100%);
+            background-size: 100% 2.2rem;
+        }
+
+        .signature {
+            font-family: 'Caveat', cursive;
+            font-size: 2rem;
+            text-align: right;
+            color: var(--rose-dust);
+            margin-top: 20px;
+        }
+
+        .boyfriend-actions {
+            margin-top: 25px;
+            text-align: center;
+            border-top: 1px dashed var(--border-color);
+            padding-top: 20px;
+        }
+
+        /* Password Unlock Section for Rest of Site */
+        .unlock-rest-section {
+            display: none;
+            text-align: center;
+            background-color: var(--card-beige);
+            border: 2px dashed var(--accent-gold);
+            border-radius: 6px;
+            padding: 30px 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .unlock-rest-section h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--vintage-brown);
+            font-size: 1.6rem;
+            margin-bottom: 10px;
+        }
+
+        .unlock-form-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            max-width: 450px;
+            margin: 20px auto 0 auto;
+        }
+
+        /* Protected Content Wrapper */
+        #protectedFullContent {
+            display: none;
+            animation: fadeIn 1s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .btn-vintage {
+            background-color: var(--vintage-brown);
+            color: var(--paper-color);
+            border: none;
+            padding: 11px 24px;
+            font-family: 'Lora', serif;
+            font-size: 0.95rem;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 2px 3px 6px rgba(0,0,0,0.15);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-vintage:hover {
+            background-color: var(--accent-gold);
+            color: var(--dark-text);
+        }
+
+        .btn-vintage:disabled {
+            background-color: #aaa;
+            cursor: not-allowed;
+        }
+
+        .btn-rose {
+            background-color: var(--rose-dust);
+        }
+
+        .btn-rose:hover {
+            background-color: var(--vintage-brown);
+            color: white;
+        }
+
+        .btn-pdf {
+            background-color: #4a5d4e;
+            color: white;
+        }
+
+        .btn-pdf:hover {
+            background-color: #334436;
+            color: white;
+        }
+
+        .secret-upload-box {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background-color: var(--paper-color);
+            border: 1px solid var(--accent-gold);
+            border-radius: 4px;
+            text-align: left;
+        }
+
+        /* 21 Motivos Section */
+        .reasons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .reason-card {
+            background-color: var(--card-beige);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px 10px;
+            text-align: center;
+            cursor: pointer;
+            min-height: 105px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .reason-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--rose-dust);
+        }
+
+        .reason-card.revealed {
+            background-color: #fffaf4;
+            border: 1px solid var(--accent-gold);
+            cursor: default;
+        }
+
+        .reason-number {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--vintage-brown);
+        }
+
+        .reason-text {
+            display: none;
+            font-family: 'Caveat', cursive;
+            font-size: 1.15rem;
+            line-height: 1.3;
+            color: var(--vintage-brown);
+        }
+
+        .reason-icon {
+            font-size: 1rem;
+            color: var(--rose-dust);
+            margin-top: 4px;
+        }
+
+        /* Form styling */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--vintage-brown);
+            font-size: 0.95rem;
+        }
+
+        input[type="text"], input[type="password"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-beige);
+            color: var(--dark-text);
+            font-family: 'Lora', serif;
+            border-radius: 3px;
+            font-size: 1rem;
+        }
+
+        input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-gold);
+            background-color: white;
+        }
+
+        .file-upload-wrapper {
+            position: relative;
+            background-color: var(--bg-beige);
+            border: 1px dashed var(--accent-gold);
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .file-upload-wrapper input[type="file"] {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* Controls: Search & Filters */
+        .wall-controls {
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .search-bar-wrapper {
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .search-bar-wrapper i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--rose-dust);
+            font-size: 1rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 15px 10px 40px !important;
+            border: 1px solid var(--border-color);
+            background-color: white !important;
+            border-radius: 20px !important;
+            font-size: 0.95rem !important;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        .filters-group {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .filter-btn {
+            background-color: var(--card-beige);
+            border: 1px solid var(--border-color);
+            color: var(--vintage-brown);
+            padding: 6px 14px;
+            font-family: 'Lora', serif;
+            font-size: 0.85rem;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--rose-dust);
+            color: var(--rose-dust);
+        }
+
+        .filter-btn.active {
+            background-color: var(--vintage-brown);
+            color: white;
+            border-color: var(--vintage-brown);
+        }
+
+        /* Polaroid Wall */
+        .polaroid-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .empty-wall-msg {
+            text-align: center;
+            grid-column: 1 / -1;
+            padding: 40px 20px;
+            font-family: 'Caveat', cursive;
+            font-size: 1.5rem;
+            color: var(--rose-dust);
+        }
+
+        .polaroid-card {
+            background-color: white;
+            padding: 15px 15px 25px 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 1px solid #e2d9cc;
+            transition: transform 0.3s ease;
+            position: relative;
+            page-break-inside: avoid;
+        }
+
+        .polaroid-card:nth-child(odd) {
+            transform: rotate(-2deg);
+        }
+
+        .polaroid-card:nth-child(even) {
+            transform: rotate(2deg);
+        }
+
+        .polaroid-card:hover {
+            transform: scale(1.03) rotate(0deg);
+            z-index: 10;
+        }
+
+        .polaroid-img {
+            width: 100%;
+            height: 290px;
+            object-fit: cover;
+            background-color: #f0f0f0;
+            border: 1px solid #eee;
+        }
+
+        .polaroid-caption {
+            font-family: 'Caveat', cursive;
+            font-size: 1.35rem;
+            color: var(--dark-text);
+            margin-top: 12px;
+            text-align: center;
+            word-wrap: break-word;
+        }
+
+        .polaroid-author {
+            font-size: 0.85rem;
+            color: var(--accent-gold);
+            text-align: right;
+            font-family: 'Lora', serif;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        .boyfriend-badge-tag {
+            display: inline-block;
+            background-color: var(--rose-dust);
+            color: white;
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-bottom: 5px;
+            font-family: 'Lora', serif;
+        }
+
+        .btn-delete-card {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(184, 125, 123, 0.85);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            z-index: 20;
+        }
+
+        .btn-delete-card:hover {
+            background-color: #903030;
+            transform: scale(1.15);
+        }
+
+        .tape {
+            position: absolute;
+            top: -10px;
+            left: 35%;
+            width: 80px;
+            height: 20px;
+            background-color: rgba(235, 220, 203, 0.7);
+            transform: rotate(-3deg);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            font-family: 'Caveat', cursive;
+            font-size: 1.3rem;
+            color: var(--vintage-brown);
+        }
+
+        @media print {
+            body {
+                background: white !important;
+                color: #222 !important;
+                padding: 0 !important;
+            }
+            .countdown-card, 
+            #publicGuestbookForm, 
+            .boyfriend-actions, 
+            .btn-pdf,
+            .btn-delete-card,
+            .wall-controls,
+            .file-upload-wrapper,
+            .reasons-section,
+            .unlock-rest-section,
+            .no-print {
+                display: none !important;
+            }
+            .vintage-card {
+                box-shadow: none !important;
+                border: 1px solid #ccc !important;
+                margin-bottom: 25px !important;
+                page-break-inside: avoid;
+            }
+            .polaroid-card {
+                transform: none !important;
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+                margin-bottom: 20px !important;
+            }
+            .polaroid-grid {
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 20px !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1.main-title {
+                font-size: 2.4rem;
+            }
+            .vintage-card {
+                padding: 20px;
+            }
+            .polaroid-grid {
+                grid-template-columns: 1fr;
+            }
+            .reasons-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .unlock-form-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Section -->
+    <header>
+        <div class="stamp-badge"><i class="fa-solid fa-stamp"></i> Edición Especial</div>
+        <h1 class="main-title">Cumpleaños de Valita</h1>
+        <p class="subtitle">Celebrando 21 años de una vida radiante y especial</p>
+        <p class="date-badge">26 de Agosto</p>
+
+        <!-- Countdown Banner -->
+        <div class="countdown-card">
+            <div id="countdownHeaderTitle" class="countdown-title">
+                <i class="fa-solid fa-clock-rotate-left"></i> Cuenta Regresiva para el Gran Día
+            </div>
+            <div id="countdownBoxGroup" class="countdown-boxes">
+                <div class="count-box">
+                    <span id="days">00</span>
+                    <p>Días</p>
+                </div>
+                <div class="count-box">
+                    <span id="hours">00</span>
+                    <p>Horas</p>
+                </div>
+                <div class="count-box">
+                    <span id="minutes">00</span>
+                    <p>Minutos</p>
+                </div>
+                <div class="count-box">
+                    <span id="seconds">00</span>
+                    <p>Segundos</p>
+                </div>
+            </div>
+            <div id="birthdayArrivedMsg" class="birthday-arrived-msg">
+                🎉 ¡HOY ES EL CUMPLEAÑOS DE VALITA! ¡FELICES 21 AÑOS! 🎂✨
+            </div>
+            <div id="waitingMsg" class="waiting-msg-box">
+                ⏳ El contenido sorpresa se desbloqueará exactamente al terminar la cuenta regresiva... ✨
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- Boyfriend Special Section (Aparece en AUTOMÁTICO al terminar la cuenta) -->
+        <div id="boyfriendSectionCard" class="vintage-card boyfriend-section">
+            <div class="boyfriend-ribbon">Para mi amor</div>
+            <h2 class="section-title"><i class="fa-solid fa-heart" style="color: var(--rose-dust);"></i> De Mi Parte Para Ti</h2>
+            
+            <div class="letter-content">
+                Felices 21 añitos, mi flaquita hermosa.
+
+                Hoy celebramos un dia mágico, y no hay nada en el mundo que me haga más feliz que estar a tu lado en momentos tan importantes como estos. Gracias por iluminar mis días con tu sonrisa, por tu ternura constante, por amarme tan bonito y por ser esa persona tan increíble que llena de alegría la vida de todos los que te rodean.
+
+                En esta nueva etapa deseo que cumplas cada uno de tus sueños, que sigas creciendo como la mujer maravillosa que eres y que siempre recuerdes lo mucho que te amo y te admiro. Que sepas que estaré contigo en todo y para lo que necesites &lt;3
+                Este espacio es solo un pequeño reflejo de todo el cariño que te tengo y te tenemos.
+
+                ¡Que este día esté lleno de amor, abrazos y recuerdos inolvidables!
+            </div>
+            
+            <div class="signature">Con todo mi amor, tu enamorado ❤️</div>
+
+            <div class="boyfriend-actions">
+                <button class="btn-vintage btn-rose" onclick="toggleBoyfriendForm()">
+                    <i class="fa-solid fa-camera"></i> Publicar recuerdo especial
+                </button>
+
+                <div id="boyfriendForm" class="secret-upload-box">
+                    <form id="bfUploadForm" onsubmit="handleBoyfriendSubmit(event)">
+                        <div class="form-group">
+                            <label>Tu Mensaje o Nota de Amor:</label>
+                            <textarea id="bfMessage" rows="3" placeholder="Escribe algo dulce para Valita..." required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Sube una foto especial:</label>
+                            <div class="file-upload-wrapper">
+                                <span id="bfFileLabel"><i class="fa-solid fa-camera"></i> Seleccionar foto de galería</span>
+                                <input type="file" id="bfPhoto" accept="image/*" onchange="updateFileName(this, 'bfFileLabel')">
+                            </div>
+                        </div>
+                        <button type="submit" id="bfSubmitBtn" class="btn-vintage"><i class="fa-solid fa-heart"></i> Publicar para Valita</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Password Unlock Banner for the rest of the site -->
+        <div id="unlockRestSection" class="unlock-rest-section no-print">
+            <h3><i class="fa-solid fa-lock"></i> Muro de Recuerdos & Sorpresas Protegidas</h3>
+            <p style="font-size: 0.95rem; color: #555;">
+                Ingresa la contraseña especial de Valita para ver los 21 motivos y el muro interactivo completo:
+            </p>
+            <div class="unlock-form-group">
+                <input type="password" id="siteAccessPassword" placeholder="Contraseña de acceso..." style="background: white;">
+                <button type="button" class="btn-vintage" onclick="unlockFullSite()">
+                    <i class="fa-solid fa-key"></i> Desbloquear
+                </button>
+            </div>
+        </div>
+
+        <!-- Protected Content (21 Motivos + Guestbook Form + Polaroid Wall) -->
+        <div id="protectedFullContent">
+            
+            <!-- 21 Motivos para Amarte -->
+            <div class="vintage-card reasons-section no-print">
+                <h2 class="section-title">21 Motivos por los que te Amo</h2>
+                <p style="text-align:center; font-style: italic; color: #666; margin-bottom: 15px;">
+                    Toca cada sobrecito para descubrir una razón especial ✨
+                </p>
+                <div id="reasonsGrid" class="reasons-grid"></div>
+            </div>
+
+            <!-- Guestbook Section -->
+            <div class="vintage-card no-print">
+                <h2 class="section-title">Déjale un Mensaje o Recuerdo</h2>
+                <p style="text-align: center; font-style: italic; margin-bottom: 20px; color: #666;">
+                    ¿Eres amigo o familiar de Valita? ¡Sube una foto y un bonito deseo para sus 21 años!
+                </p>
+
+                <form id="publicGuestbookForm" onsubmit="handlePublicSubmit(event)">
+                    <div class="form-group">
+                        <label for="guestName"><i class="fa-solid fa-user"></i> Tu Nombre:</label>
+                        <input type="text" id="guestName" placeholder="Ej. Tu amiga Maria / Tío Carlos" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="guestMessage"><i class="fa-solid fa-comment"></i> Tu Mensaje de Cumpleaños:</label>
+                        <textarea id="guestMessage" rows="3" placeholder="¡Feliz cumpleaños Valita! Deseo que..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-image"></i> Adjuntar Foto (Opcional):</label>
+                        <div class="file-upload-wrapper">
+                            <span id="publicFileLabel"><i class="fa-solid fa-upload"></i> Haz clic aquí para subir una foto</span>
+                            <input type="file" id="guestPhoto" accept="image/*" onchange="updateFileName(this, 'publicFileLabel')">
+                        </div>
+                    </div>
+
+                    <div style="text-align: center;">
+                        <button type="submit" id="guestSubmitBtn" class="btn-vintage">
+                            <i class="fa-solid fa-paper-plane"></i> Publicar Mensaje
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Polaroid Wall -->
+            <div class="vintage-card">
+                <h2 class="section-title">Muro de Recuerdos y Felicitaciones</h2>
+                
+                <div class="wall-controls no-print">
+                    <div class="search-bar-wrapper">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="wallSearchInput" class="search-input" placeholder="Buscar por nombre o palabra..." oninput="handleSearchFilter()">
+                    </div>
+                    <div class="filters-group">
+                        <button type="button" class="filter-btn active" onclick="setWallFilter('all', this)">
+                            <i class="fa-solid fa-border-all"></i> Todos
+                        </button>
+                        <button type="button" class="filter-btn" onclick="setWallFilter('boyfriend', this)">
+                            <i class="fa-solid fa-heart"></i> De su Enamorado
+                        </button>
+                        <button type="button" class="filter-btn" onclick="setWallFilter('friends', this)">
+                            <i class="fa-solid fa-users"></i> Amigos / Familia
+                        </button>
+                        <button type="button" class="filter-btn" onclick="setWallFilter('photos', this)">
+                            <i class="fa-solid fa-camera"></i> Solo con Foto
+                        </button>
+                    </div>
+                </div>
+
+                <div id="polaroidWall" class="polaroid-grid"></div>
+
+                <div style="text-align: center; margin-top: 35px;" class="no-print">
+                    <button class="btn-vintage btn-pdf" onclick="downloadMemoryPDF()">
+                        <i class="fa-solid fa-file-pdf"></i> Guardar / Descargar Álbum de Recuerdos en PDF
+                    </button>
+                    <p style="font-size: 0.82rem; color: #777; margin-top: 8px;">
+                        * Descarga un PDF maquetado como un fotolibro limpio con la carta y todos los recuerdos.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <footer>
+        <p>Creado con todo el corazón para los 21 años de Valita ✨ 26 de Agosto</p>
+    </footer>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyD7IHtBw88MgHLXl7GDTHUPxUqmOXUNW1c",
+            authDomain: "los-21-de-valita.firebaseapp.com",
+            projectId: "los-21-de-valita",
+            storageBucket: "los-21-de-valita.firebasestorage.app",
+            messagingSenderId: "150352327084",
+            appId: "1:150352327084:web:25e7f77a663fec10ec8a09"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+
+        // CONTRASEÑA CONFIGURADA DIRECTA
+        const MASTER_PASSWORD = "081225"; 
+        
+        let countdownConfettiTriggered = false;
+        let currentFilter = 'all';
+        let allPosts = [];
+        let isBirthdayArrived = false;
+
+        function updateCountdown() {
+            const now = new Date();
+            let currentYear = now.getFullYear();
+            let targetDate = new Date(`August 26, ${currentYear} 00:00:00`);
+            const endOfBirthday = new Date(`August 26, ${currentYear} 23:59:59`);
+
+            if (now > endOfBirthday) {
+                targetDate = new Date(`August 26, ${currentYear + 1} 00:00:00`);
+            }
+
+            const difference = targetDate - now;
+
+            // CUANDO LLEGA EL CUMPLEAÑOS
+            if (difference <= 0 && now <= endOfBirthday) {
+                isBirthdayArrived = true;
+                document.getElementById('countdownBoxGroup').style.display = 'none';
+                document.getElementById('countdownHeaderTitle').style.display = 'none';
+                document.getElementById('birthdayArrivedMsg').style.display = 'block';
+                document.getElementById('waitingMsg').style.display = 'none';
+
+                // DESBLOQUEA TU APARTADO EN AUTOMÁTICO
+                document.getElementById('boyfriendSectionCard').style.display = 'block';
+                
+                // MUESTRA EL FORMULARIO DE CONTRASEÑA PARA EL RESTO (si aún no fue ingresada)
+                if (document.getElementById('protectedFullContent').style.display !== 'block') {
+                    document.getElementById('unlockRestSection').style.display = 'block';
+                }
+
+                if (!countdownConfettiTriggered && typeof confetti === 'function') {
+                    confetti({
+                        particleCount: 120,
+                        spread: 80,
+                        origin: { y: 0.6 }
+                    });
+                    countdownConfettiTriggered = true;
+                }
+                return;
+            }
+
+            // ANTES DE LA FECHA (Modo Bloqueado)
+            isBirthdayArrived = false;
+            document.getElementById('boyfriendSectionCard').style.display = 'none';
+            document.getElementById('unlockRestSection').style.display = 'none';
+            document.getElementById('protectedFullContent').style.display = 'none';
+            document.getElementById('waitingMsg').style.display = 'block';
+
+            const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+            document.getElementById('days').innerText = days < 10 ? '0' + days : days;
+            document.getElementById('hours').innerText = hours < 10 ? '0' + hours : hours;
+            document.getElementById('minutes').innerText = minutes < 10 ? '0' + minutes : minutes;
+            document.getElementById('seconds').innerText = seconds < 10 ? '0' + seconds : seconds;
+        }
+
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+
+        function unlockFullSite() {
+            const pwd = document.getElementById('siteAccessPassword').value;
+            if (pwd === MASTER_PASSWORD) {
+                document.getElementById('unlockRestSection').style.display = 'none';
+                document.getElementById('protectedFullContent').style.display = 'block';
+                renderWall();
+                alert('¡Sorpresa desbloqueada! 🎉 Disfruta de todos tus recuerdos.');
+            } else {
+                alert('Contraseña incorrecta. Pídesela a tu novio ✨');
+            }
+        }
+
+        function downloadMemoryPDF() {
+            window.print();
+        }
+
+        function updateFileName(input, labelId) {
+            const label = document.getElementById(labelId);
+            if (input.files && input.files[0]) {
+                label.innerHTML = `<i class="fa-solid fa-check" style="color:green;"></i> ${input.files[0].name}`;
+            }
+        }
+
+        function toggleBoyfriendForm() {
+            const box = document.getElementById('boyfriendForm');
+            box.style.display = box.style.display === 'block' ? 'none' : 'block';
+        }
+
+        const reasonsList = [
+            "Tu sonrisa tan linda",
+            "La paz que me das",
+            "Tu forma de abrazarme",
+            "Tu risa contagiosa",
+            "Lo inteligente que eres",
+            "Tu buen corazón",
+            "Nuestras pláticas",
+            "Tu dulzura única",
+            "Cómo me apoyas",
+            "Tus ojos hermosos",
+            "Tu ternura al hablarme",
+            "Tu fortaleza y metas",
+            "Lo detallista que eres",
+            "Hacerte reír",
+            "Tu autenticidad",
+            "Caminar a tu lado",
+            "Tus ocurrencias",
+            "Cómo iluminas todo",
+            "Tu forma de ser",
+            "Nuestros recuerdos",
+            "Por ser tú, mi vida"
+        ];
+
+        function renderReasons() {
+            const container = document.getElementById('reasonsGrid');
+            container.innerHTML = '';
+            reasonsList.forEach((reason, index) => {
+                const card = document.createElement('div');
+                card.className = 'reason-card';
+                card.innerHTML = `
+                    <div class="reason-cover">
+                        <span class="reason-number">#${index + 1}</span>
+                        <div class="reason-icon"><i class="fa-solid fa-envelope"></i></div>
+                    </div>
+                    <div class="reason-text">${reason}</div>
+                `;
+                card.onclick = () => {
+                    card.classList.add('revealed');
+                    card.querySelector('.reason-cover').style.display = 'none';
+                    card.querySelector('.reason-text').style.display = 'block';
+                };
+                container.appendChild(card);
+            });
+        }
+
+        function initRealtimeWall() {
+            db.collection("posts")
+              .orderBy("timestamp", "desc")
+              .onSnapshot((snapshot) => {
+                  allPosts = [];
+                  snapshot.forEach((doc) => {
+                      allPosts.push({
+                          id: doc.id,
+                          ...doc.data()
+                      });
+                  });
+                  renderWall();
+              }, (error) => {
+                  console.error("Error al escuchar posts de Firestore:", error);
+              });
+        }
+
+        async function deletePost(id) {
+            const pwd = prompt("Para eliminar este recuerdo, ingresa la clave de administrador:");
+            if (pwd === MASTER_PASSWORD) {
+                try {
+                    await db.collection("posts").doc(id).delete();
+                    alert("Recuerdo eliminado.");
+                } catch (error) {
+                    console.error("Error al eliminar:", error);
+                    alert("Hubo un error al eliminar.");
+                }
+            } else if (pwd !== null) {
+                alert("Clave incorrecta. No se puede eliminar.");
+            }
+        }
+
+        function setWallFilter(filter, buttonElement) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            if (buttonElement) buttonElement.classList.add('active');
+            renderWall();
+        }
+
+        function handleSearchFilter() {
+            renderWall();
+        }
+
+        function renderWall() {
+            const wall = document.getElementById('polaroidWall');
+            if (!wall) return;
+            const searchInput = document.getElementById('wallSearchInput');
+            const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+            
+            let posts = [...allPosts];
+
+            if (currentFilter === 'boyfriend') {
+                posts = posts.filter(p => p.isBoyfriend);
+            } else if (currentFilter === 'friends') {
+                posts = posts.filter(p => !p.isBoyfriend);
+            } else if (currentFilter === 'photos') {
+                posts = posts.filter(p => p.image);
+            }
+
+            if (searchTerm) {
+                posts = posts.filter(p => 
+                    (p.author && p.author.toLowerCase().includes(searchTerm)) ||
+                    (p.message && p.message.toLowerCase().includes(searchTerm))
+                );
+            }
+
+            wall.innerHTML = '';
+
+            if (posts.length === 0) {
+                wall.innerHTML = `
+                    <div class="empty-wall-msg">
+                        <i class="fa-solid fa-camera-retro"></i><br>
+                        No se encontraron recuerdos con los filtros aplicados.<br>
+                    </div>
+                `;
+                return;
+            }
+
+            posts.forEach(post => {
+                const card = document.createElement('div');
+                card.className = 'polaroid-card';
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn-delete-card no-print';
+                deleteBtn.title = 'Eliminar este recuerdo';
+                deleteBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+                deleteBtn.onclick = () => deletePost(post.id);
+                card.appendChild(deleteBtn);
+
+                const tape = document.createElement('div');
+                tape.className = 'tape';
+                card.appendChild(tape);
+
+                if (post.image) {
+                    const img = document.createElement('img');
+                    img.src = post.image;
+                    img.className = 'polaroid-img';
+                    img.alt = 'Recuerdo';
+                    img.loading = "lazy";
+                    card.appendChild(img);
+                }
+
+                const caption = document.createElement('div');
+                caption.className = 'polaroid-caption';
+                caption.innerText = `"${post.message}"`;
+                card.appendChild(caption);
+
+                const author = document.createElement('div');
+                author.className = 'polaroid-author';
+                
+                if (post.isBoyfriend) {
+                    author.innerHTML = `<span class="boyfriend-badge-tag"><i class="fa-solid fa-heart"></i> De tu Enamorado</span><br>— ${post.author}`;
+                } else {
+                    author.innerHTML = `— ${post.author}`;
+                }
+                card.appendChild(author);
+
+                wall.appendChild(card);
+            });
+        }
+
+        function compressAndConvertToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 600;
+                        const scale = MAX_WIDTH / img.width;
+                        if (scale < 1) {
+                            canvas.width = MAX_WIDTH;
+                            canvas.height = img.height * scale;
+                        } else {
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                        }
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.65));
+                    };
+                    img.onerror = (e) => reject(e);
+                };
+                reader.onerror = (e) => reject(e);
+            });
+        }
+
+        async function handlePublicSubmit(event) {
+            event.preventDefault();
+            const submitBtn = document.getElementById('guestSubmitBtn');
+            const name = document.getElementById('guestName').value;
+            const message = document.getElementById('guestMessage').value;
+            const photoInput = document.getElementById('guestPhoto');
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Publicando...';
+
+            try {
+                let imageBase64 = null;
+                if (photoInput.files && photoInput.files[0]) {
+                    imageBase64 = await compressAndConvertToBase64(photoInput.files[0]);
+                }
+
+                await db.collection("posts").add({
+                    author: name,
+                    isBoyfriend: false,
+                    message: message,
+                    image: imageBase64,
+                    date: "26 de Agosto",
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                document.getElementById('publicGuestbookForm').reset();
+                document.getElementById('publicFileLabel').innerHTML = '<i class="fa-solid fa-upload"></i> Haz clic aquí para subir una foto';
+                alert('¡Tu mensaje ha sido publicado en el muro de Valita!');
+            } catch (error) {
+                console.error("Error al guardar:", error);
+                alert("Ocurrió un error al enviar el mensaje. Intenta de nuevo.");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Publicar Mensaje';
+            }
+        }
+
+        async function handleBoyfriendSubmit(event) {
+            event.preventDefault();
+            const submitBtn = document.getElementById('bfSubmitBtn');
+            const message = document.getElementById('bfMessage').value;
+            const photoInput = document.getElementById('bfPhoto');
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Publicando...';
+
+            try {
+                let imageBase64 = null;
+                if (photoInput.files && photoInput.files[0]) {
+                    imageBase64 = await compressAndConvertToBase64(photoInput.files[0]);
+                }
+
+                await db.collection("posts").add({
+                    author: "Tu Enamorado",
+                    isBoyfriend: true,
+                    message: message,
+                    image: imageBase64,
+                    date: "26 de Agosto",
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                document.getElementById('bfUploadForm').reset();
+                document.getElementById('bfFileLabel').innerHTML = '<i class="fa-solid fa-camera"></i> Seleccionar foto de galería';
+                toggleBoyfriendForm();
+                alert('¡Tu nota especial ha sido publicada en el muro!');
+            } catch (error) {
+                console.error("Error al guardar:", error);
+                alert("Ocurrió un error al publicar.");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-heart"></i> Publicar para Valita';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderReasons();
+            initRealtimeWall();
+        });
+    </script>
+</body>
+</html>
